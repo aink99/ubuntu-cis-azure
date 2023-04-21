@@ -1,0 +1,79 @@
+---
+- name: Hardening Ubuntu
+  gather_facts: false
+  become: true
+  hosts: localhost
+  tasks:
+
+     - name: Remove the user 'games'
+       ansible.builtin.user:
+            name: games
+            state: absent
+            #remove: yes
+
+     - name: Set Password Expiration Days
+       lineinfile:
+         dest: '/etc/login.defs'
+         regexp: "PASS_MIN_DAYS"
+         line: "PASS_MIN_DAYS 7"
+         state: present
+
+     - name: Uncommenting SYS_UID_MIN for Azure scan
+       lineinfile:
+         dest: '/etc/login.defs'
+         regexp: "SYS_UID_MIN"
+         line: "SYS_UID_MIN             100"
+         state: present
+
+     - name: Uncommenting SYS_UID_MAX for Azure scan
+       lineinfile:
+         dest: '/etc/login.defs'
+         regexp: "SYS_UID_MAX"
+         line: "SYS_UID_MAX             999"
+         state: present
+
+     - name: Setting UMASK to 077
+       lineinfile:
+         dest: '/etc/login.defs'
+         regexp: "UMASK"
+         line: "UMASK             077"
+         state: present
+
+     - name: Setting ClientAliveCountMax 1
+       lineinfile:
+         dest: '/etc/ssh/sshd_config'
+         regexp: "ClientAliveCountMax"
+         line: "ClientAliveCountMax 1"
+         state: present
+
+     - name: Adjusting ssh MACs
+       lineinfile:
+         dest: '/etc/ssh/sshd_config'
+         regexp: "MACs"
+         line: "MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256"
+         state: present
+
+     - name: Adjusting ssh Ciphers
+       lineinfile:
+         dest: '/etc/ssh/sshd_config'
+         regexp: "Ciphers"
+         line: "Ciphers aes128-ctr,aes256-ctr,aes192-ctr"
+         state: present
+
+     - name: Reload ssh
+       service:
+         name: ssh
+         state: reloaded
+
+     - name: Remove "postfix" package
+       ansible.builtin.apt:
+          name: postfix
+          state: absent
+
+     - name: Change file ownership, group and permissions
+       ansible.builtin.file:
+          path:  "{{ item }}"
+          mode: '0400'
+       loop:
+          - /etc/shadow
+          - /etc/gshadow
