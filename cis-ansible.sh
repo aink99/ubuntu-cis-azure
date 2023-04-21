@@ -16,4 +16,4 @@ ansible-playbook cis-playbook.yaml
 
 wget https://raw.githubusercontent.com/aink99/ubuntu-cis-azure/main/Ubuntu-hardening.yaml
 
-ansible Ubuntu-hardening.yaml
+ansible-playbook Ubuntu-hardening.yaml
